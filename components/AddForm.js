@@ -1,32 +1,47 @@
 import React from 'react';
 
 
-class GetItem extends React.Component
+class AddForm extends React.Component
 {
 	constructor(props) {
 		super(props);
-		this.state = {itemData:this.props.data}
+		
+		this.state = {
+			id: Date.now(),
+			name: '',
+			description: '',
+		}
+	}
+	
+	handleNameOnChange(event) {
+		this.setState({name:event.target.value});
+	}
+	
+	handleDescriptionOnChange(event) {
+		this.setState({description:event.target.value});
 	}
 	
 	render()
 	{
-		let obItem = this.state.itemData;
-		return(
-			<div className="item" key={obItem.id}>
-			 <input onChange={this.handleCheckboxChange.bind(this)} className="item_checkbox" type="checkbox"/>
-				<ul className="item_wrapper" key={obItem.id}>
+			return(
+				<div className="item">
+					<input className="item_checkbox" type="checkbox"/>
+					<form className="item_wrapper" onSubmit={this.props.onSubmit(this.state)}>
 						<header className="item_header">
-							<li className="item_name" onClick={this.showDescription.bind(this)}>{obItem.name}</li>
+							<div className="item_header_name">
+								<input type="text" placeholder="Enter new name" defaultValue="" onChange={this.handleNameOnChange.bind(this)} />
+							</div>
 							<section className="item_controls">
-								<li className="item_edit-button" data-action='edit' data-id={obItem.id} onClick={this.editItem.bind(this)}>Edit</li>
-							</section>
+								<input className="item_button" type="submit" value="save"/>
+								<input className="item_button" onClick={this.props.onDiscard} type="button" value="cancel"/>
+							</section> 
 						</header>
-						{obItem.show ? <li className="item_description">{obItem.description}</li> : ''}
-				</ul>
-			</div>
-		);
+						<textarea className="item_textarea" placeholder="Enter new description" defaultValue="" onChange={this.handleDescriptionOnChange.bind(this)}></textarea>				
+					</form>
+				</div>
+			);
 	}
 	
 }
 
-export default GetItem;
+export default AddForm;
