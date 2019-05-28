@@ -1,4 +1,5 @@
 import React from 'react';
+import './css/Item.css';
 import ViewItem from './ViewItem';
 import EditForm from './EditForm';
 
@@ -11,7 +12,7 @@ class Item extends React.Component
 		this.state = {itemState: 'show'};
 	}
 	
-	/* Toggles item state depending on parameter given: show - view mode, edit - edit mode */
+	/* Toggles component mode depending on newState parameter given: show/edit */
 	setItemState(newState)
 	{
 		this.setState({itemState: newState});
@@ -19,19 +20,34 @@ class Item extends React.Component
 	
 	render()
 	{
-		/* Set vars for values to make code easier to read */
-		let strItemState = this.state.itemState;
-		let props = this.props;
-		let funcSetItemState = this.setItemState.bind(this);
-		let obItemData = this.props.itemData;
+		/* Set vars for short values to make code easier to read */
+		const 
+			strItemState = this.state.itemState,
+			funcSetItemState = this.setItemState.bind(this),
+			intItemKey = this.props.itemKey,
+			obItemData = this.props.itemData,
+			componentRights = this.props.componentRights;
 
 		if (strItemState === 'show') {
 			return (
-				<ViewItem itemData={obItemData} setItemState={funcSetItemState} onSelect={props.onSelect}/>
+				<ViewItem 
+					itemKey={intItemKey} 
+					itemData={obItemData} 
+					setItemState={funcSetItemState} 
+					onSelect={this.props.onSelect}
+					componentRights={componentRights}
+				/>
 			);
-		} else if (strItemState === 'edit') {
+		} else if (strItemState === 'edit' && componentRights.isEditAllowed) {
 			return (
-				<EditForm itemData={obItemData} setItemState={funcSetItemState} saveChanges={props.saveChanges.bind(this)}/>
+				<EditForm 
+					itemKey={intItemKey}
+					itemData={obItemData}
+					onSelect={this.props.onSelect}
+					setItemState={funcSetItemState}
+					saveEditChanges={this.props.saveEditChanges}
+					componentRights={componentRights}
+				/>
 			);
 		} 
 	}

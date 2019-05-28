@@ -5,60 +5,64 @@ class EditForm extends React.Component
 {
 	constructor(props) {
 		super(props);
-
-		/* Set vars for values to make code easier to read */
-		let strDescription = this.props.itemData.description;
-		let intItemId = this.props.itemData.id;
 		
 		/* Set values to change and save item data */
-		this.state = {
-			intItemId:intItemId, 
-			strDescription:strDescription,
-		};
+		this.state = this.props.itemData;
 	}
 	
-	handleDescriptionChange(event) {
-		let strTargetValue = event.target.value;
+	handleDescriptionChange = event => {
+		const strTargetValue = event.target.value;
 		this.setState({
-			strDescription: strTargetValue,
+			description: strTargetValue,
 		})
 	}
 	
-	saveChangesAndShow(obData, event) {
+	saveChangesAndShow = event => {
 		event.preventDefault();
-		this.props.saveChanges(obData);
+		const obData = {
+			strDescription:this.state.description,
+			intItemKey:this.props.itemKey,
+		};
+		this.props.saveEditChanges(obData);
 		this.props.setItemState('show');
 	}
 	
-	discardChanges() {
-		this.setState(null);
+	/* Cancel edit, changes item state to show */
+	discardChanges () {
 		this.props.setItemState('show');
 	}
 	
 	
 	render() {
-		/* Set vars for values to make code easier to read */
-		let state = this.state;
-		let obChangeData = {
-			intItemId:state.intItemId, 
-			strDescription:state.strDescription,
-		}
-		let strItemName = this.props.itemData.name;
+		const 
+			strNameValue = this.props.itemData.name,
+			strDescripionValue = this.props.itemData.description,
+			intItemKey = this.props.itemKey,
+			boolSelected = this.props.itemData.boolSelected,
+			isDeleteAllowed = this.props.componentRights.isDeleteAllowed,
+			itemCheckbox = 
+				isDeleteAllowed ? (
+					<input className="item_checkbox" type="checkbox" checked={boolSelected} onChange={this.props.onSelect(intItemKey)}/> 
+				) : (
+					''
+				);
 		
 		return (
 			<div className="item">
-				<input className="item_checkbox" type="checkbox"/>
-				<form className="item_wrapper">
+				<div className="item_checkbox-wrapper">{itemCheckbox}</div>
+				<form className="item_wrapper" onSubmit={this.saveChangesAndShow}>
 					<header className="item_header">
 						<div className="item_header_name">
-							<span className="item_name">{strItemName}</span>
+							<span className="item_name">{strNameValue}</span>
 						</div>
 						<section className="item_controls">
-							<input className="item_button" type="button" onClick={this.saveChangesAndShow.bind(this, obChangeData)} value="save"/>
+							<input className="item_button" type="submit" value="save"/>
 							<input className="item_button" type="button" onClick={this.discardChanges.bind(this)} value="cancel"/>
 						</section> 
 					</header>
-					<textarea className="item_textarea" onChange={this.handleDescriptionChange.bind(this)} defaultValue={state.strDescription}></textarea>				
+					<div className="item_description">
+						<textarea className="item_textarea" onChange={this.handleDescriptionChange} defaultValue={strDescripionValue}></textarea>				
+					</div>
 				</form>
 			</div>
 		);

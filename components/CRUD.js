@@ -9,26 +9,37 @@ class CRUD extends React.Component
 	
 	constructor(props) {
 		super(props);
-		this.state = {items: this.props.items, showAddForm:false};
+		
+		/* Init item default selected value */
+		const arItems = this.props.items.map(obItem => {
+			obItem['boolSelected'] = false;
+			return obItem;
+		})
+		this.state = {arItems: arItems, boolShowAddForm:false, boolAllItemsSelected:false};
 	}
 	
 	/* creates Item component instance for each element of init array */
 	getItems() {
-		const items = this.state.items.map(obItem =>
-			<Item key={obItem.id} itemData={obItem} onSelect={this.selectItem.bind(this)} saveChanges={this.saveChanges.bind(this)}/>
+		const arItems = this.state.arItems.map((obItem, itemKey) =>
+			<Item 
+				componentRights={this.props.componentRights} 
+				key={itemKey} 
+				itemKey={itemKey} 
+				itemData={obItem} 
+				onSelect={this.selectItem.bind(this)} 
+				saveEditChanges={this.saveEditChanges.bind(this)}
+			/>
 		);
-		return items;
+		return arItems;
 	}
 	
 	/* toggles item selected state when it's checkbox changes; item's checkboxes onSubmit handler */
-	selectItem = itemId => event => {
-		let itemChecked = event.target.checked;
+	selectItem = itemKey => event => {
+		const itemChecked = event.target.checked;
 		this.setState({
-			items: this.state.items.map(obItem => {
-				if (obItem.id === itemId) {
-					itemChecked ? 
-					obItem['selected'] = true :  
-					obItem['selected'] = false;
+			arItems: this.state.arItems.map((obItem, key) => {
+				if (itemKey === key) {
+					itemChecked ? obItem['boolSelected'] = true :  obItem['boolSelected'] = false;
 				}
 				return obItem;
 			})
@@ -36,72 +47,112 @@ class CRUD extends React.Component
 	}
 	
 	/* select/unselect every existing Item */
-	selectAll() {
-		
-	}
-	
-	showAddForm() {
-		this.setState({showAddForm: true});
-	}
-	
-	hideAddForm() {
-		this.setState({showAddForm: false});
-	}
-	
-	deleteSelectedItems() {
+	toggleSelectAll() {
+		const boolAllItemsSelected = this.state.boolAllItemsSelected;
 		this.setState({
-			items: this.state.items.filter(function(item){
-				return !item.selected;
-			})
-		});
-		
-	}
-	
-	/* creates new item in state.items; AddForm OnSubmit handler  */
-	addItem = itemData => event =>{
-		event.preventDefault();
-		let newArray = this.state.items.concat([
-            {itemData}
-		]);
-		this.setState({items: newArray, showAddForm: false})
-		
-	}
-	
-	saveChanges = data => {
-		this.setState({
-			items: this.state.items.map(obItem => {
-				if (obItem.id === data.intItemId) {
-					obItem['description'] = data.strDescription;
+			arItems: this.state.arItems.map(obItem => {
+				if (!boolAllItemsSelected) {
+					obItem['boolSelected'] = true;
+				} else {
+					obItem['boolSelected'] = false;
 				}
 				return obItem;
-			})
+			}),
+			boolAllItemsSelected: this.state.boolAllItemsSelected ? false : true,
+			
 		});
+	}
+	
+	/* Shows item add form */
+	showAddForm() {
+		this.setState({boolShowAddForm: true});
+	}
+	
+	/* Hides item add form */
+	hideAddForm() {
+		this.setState({boolShowAddForm: false});
+	}
+	
+	/* Delete every selected item */
+	deleteSelectedItems() {
+		const deleteAllowed = this.props.componentRights.isDeleteAllowed;
+		/* Check delete rights */
+		if (deleteAllowed) {
+			this.setState({
+				arItems: this.state.arItems.filter(function(item){
+					return !item.boolSelected;
+				})
+			});
+		}
+	}
+	
+	/* Create new item in state.items; AddForm OnSubmit handler  */
+	addItem = itemData => event =>{
+		const createAllowed = this.props.componentRights.isCreateAllowed;
+		/* Check add rights */
+		if (createAllowed) {
+			event.preventDefault();
+			const arNewItems = this.state.arItems.concat([
+				{name:itemData.strName, description:itemData.strDescription}
+			]);
+			this.setState({arItems: arNewItems, boolShowAddForm:false})
+		}
+		
+	}
+	
+	/* Saves data after item is edited */
+	saveEditChanges = (data) => {
+		const editAllowed = this.props.componentRights.isEditAllowed;
+		/* Check delete rights */
+		if (editAllowed) {
+			this.setState({
+				arItems: this.state.arItems.map((obItem, key) => {
+					if (key === data.intItemKey) {
+						obItem['description'] = data.strDescription;
+					}
+					return obItem;
+				})
+			});
+		}
 	}
 	
 	render(){
-		/* Set vars for values to make code easier to read */
-		let componentRights = this.props.componentRights;
-		let showAddForm = this.state.showAddForm;
-		
-		/* Checks if delete allowed and show\hide select & delete buttons */
-		let selectAllButton = componentRights.isDeleteAllowed ? <li className="toolbar_item">Select/Unselect All</li> : '';
-		let deleteButton = componentRights.isDeleteAllowed ? <li className="toolbar_item" onClick={this.deleteSelectedItems.bind(this)}>Delete Selected</li> : '';
-		
+		const 
+			componentRights = this.props.componentRights,
+			boolShowAddForm = this.state.boolShowAddForm,
+			/* Checks if action allowed and shows corresponding button */
+			selectAllButton = 
+				componentRights.isDeleteAllowed ? (
+						<li className="button" onClick={this.toggleSelectAll.bind(this)}>Select/Unselect All</li>
+					) : (
+						''
+					),
+			deleteButton = 
+				componentRights.isDeleteAllowed ? (
+						<li className="button" onClick={this.deleteSelectedItems.bind(this)}>Delete Selected</li>
+					) : ( 
+						''
+					),
+			addButton = 
+				componentRights.isCreateAllowed ? (
+					<li className="button" onClick={this.showAddForm.bind(this)}>Add New</li>
+					) : (
+						''
+					);
 		return(
-		<div className="root_wrapper">
-			<nav className="toolbar">
-				<ul className="toolbar_list">
-					<li className="toolbar_item" onClick={this.showAddForm.bind(this)}>Add New</li>
+			<div className="root_wrapper">
+				<header className="header">
+						<h1 className="page-title">{this.props.title}</h1>{addButton}
+				</header>
+				<main className="main">
+					{this.getItems()}
+					{boolShowAddForm ? <AddForm onSubmit={this.addItem.bind(this)} isActive={this.state.showAddForm} onDiscard={this.hideAddForm.bind(this)}/> : ''}
+				</main>
+				<footer className="footer">
 					{selectAllButton}
 					{deleteButton}
-				</ul>
-			</nav>
-			<main className="main">
-				<h1 className="page-title">Items</h1>
-				{this.getItems()}
-				{showAddForm ? <AddForm onSubmit={this.addItem.bind(this)} isActive={this.state.showAddForm} onDiscard={this.hideAddForm.bind(this)}/> : ''}
-			</main>
-		</div>
+				</footer>
+			</div>
 		);
 	}
 }
