@@ -162,8 +162,12 @@ class Item extends React.Component
 	getItem() {
 		const 
 			itemState = this.getItemState(),
-			domItem = this.getDomItem();
-			
+			domItem = this.getDomItem(),
+			itemData = {
+				strName:this.state.tempName,
+				strDescription:this.state.tempDescription,
+				intItemKey: this.props.itemKey,
+			};
 			
 			if (itemState === 'preview' || itemState ===  'show') { 
 				return (
@@ -171,13 +175,9 @@ class Item extends React.Component
 				);
 			} else if (itemState === 'edit') {
 				return (
-					<form className="item_wrapper" onSubmit={this.handleFormOnSubmit.bind(this)}>{domItem}</form>
+					<form className="item_wrapper" onSubmit={this.handleEditFormOnSubmit.bind(this, itemData)}>{domItem}</form>
 				);
 			} else if (itemState === 'add') {
-				const itemData = {
-					strName:this.state.tempName,
-					strDescription:this.state.tempDescription,
-				};
 				return (
 					<form className="item_wrapper" onSubmit={this.props.onSubmit(itemData)}>{domItem}</form>
 				);
@@ -216,13 +216,10 @@ class Item extends React.Component
 		});
 	}	
 	
-	handleFormOnSubmit(event) {
+	handleEditFormOnSubmit(itemData, event) {
 		event.preventDefault();
-		this.setState({
-			description: this.state.tempDescription,
-			name: this.state.tempName,
-			itemState: 'show',
-		});
+		this.props.saveEditChanges(itemData);
+		this.setState({itemState: 'show'});
 	}
 	
 	handleCancelOnClick() {
