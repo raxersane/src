@@ -1,6 +1,5 @@
 import React from 'react';
 import Item from './Item';
-import AddForm from './AddForm';
 import './css/CRUD.css';
 import './css/reset.css';
 
@@ -61,6 +60,7 @@ class CRUD extends React.Component
 			boolAllItemsSelected: this.state.boolAllItemsSelected ? false : true,
 			
 		});
+		console.log(this.state.arItems);
 	}
 	
 	/* Shows item add form */
@@ -146,7 +146,7 @@ class CRUD extends React.Component
 				</header>
 				<main className="main">
 					{this.getItems()}
-					{boolShowAddForm ? <AddForm onSubmit={this.addItem.bind(this)} isActive={this.state.showAddForm} onDiscard={this.hideAddForm.bind(this)}/> : ''}
+					{boolShowAddForm ? <Item onSubmit={this.addItem.bind(this)}/> : ''}
 				</main>
 				<footer className="footer">
 					{selectAllButton}
