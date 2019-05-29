@@ -13,7 +13,8 @@ class CRUD extends React.Component
 		const arItems = this.props.items.map(obItem => {
 			obItem['boolSelected'] = false;
 			return obItem;
-		})
+		});
+		
 		this.state = {arItems: arItems, boolShowAddForm:false, boolAllItemsSelected:false};
 	}
 	
@@ -60,7 +61,6 @@ class CRUD extends React.Component
 			boolAllItemsSelected: this.state.boolAllItemsSelected ? false : true,
 			
 		});
-		console.log(this.state.arItems);
 	}
 	
 	/* Shows item add form */
@@ -89,9 +89,9 @@ class CRUD extends React.Component
 	/* Create new item in state.items; AddForm OnSubmit handler  */
 	addItem = itemData => event =>{
 		const createAllowed = this.props.componentRights.isCreateAllowed;
+		event.preventDefault();
 		/* Check add rights */
 		if (createAllowed) {
-			event.preventDefault();
 			const arNewItems = this.state.arItems.concat([
 				{name:itemData.strName, description:itemData.strDescription}
 			]);
@@ -146,7 +146,16 @@ class CRUD extends React.Component
 				</header>
 				<main className="main">
 					{this.getItems()}
-					{boolShowAddForm ? <Item onSubmit={this.addItem.bind(this)}/> : ''}
+					{boolShowAddForm ? (
+						<Item 
+							itemState='add' 
+							componentRights={this.props.componentRights} 
+							itemData={{boolSelected:false}} 
+							onSubmit={this.addItem} 
+							onCancel={this.hideAddForm.bind(this)}
+						/> 
+						) : ( '' 
+					)}
 				</main>
 				<footer className="footer">
 					{selectAllButton}

@@ -9,57 +9,24 @@ class Item extends React.Component
 		const 
 			itemDescription = this.props.itemData.description ? this.props.itemData.description : '',
 			itemState = this.props.itemState ? this.props.itemState : 'preview';
-			
 		this.state = {itemState: itemState, tempName: '', tempDescription: itemDescription};
 	}
 	
-	/* Setters & Getters*/
-	setItemState(newState) {
-		this.setState({itemState: newState});
-	}
-	
+	/* Getters*/
 	getItemState() {
 		return this.state.itemState;
-	}
-	
-	getDescription() {
-		return this.props.itemData.description;
-	}
-	
-	getTempItemDescription() {
-		return this.state.tempDescription;
-	}
-	
-	getTempItemName() {
-		return this.state.tempName;
-	}
-	
-	IsDeleteAllowed() {
-		return this.props.componentRights.isDeleteAllowed;
-	}
-	
-	IsEditAllowed() {
-		return this.props.componentRights.IsEditAllowed;
 	}
 	
 	IsAddAllowed() {
 		return this.props.componentRights.IsAddAllowed;
 	}
 	
-	IsSelected() {
-		return this.props.itemData.boolSelected;
-	}
-	
-	getItemKey() {
-		return this.props.itemKey;
-	}
-	
 	/* Item DOM getters */
 	getDomDescription() {
 		const 
-			strTempDescription = this.getTempItemDescription(),
-			strDescription = this.getDescription(),
-			strItemState = this.getItemState();
+			strTempDescription = this.state.tempDescription,
+			strDescription = this.props.itemData.description,
+			strItemState = this.state.itemState;
 		let jsxDescription;
 			
 		switch (strItemState) {
@@ -88,7 +55,7 @@ class Item extends React.Component
 	getDomName() {
 		const 
 			strItemState = this.getItemState(),
-			strName = this.getItemName();
+			strName = this.props.itemData.name;
 
 		let jsxName = '';
 			
@@ -121,11 +88,11 @@ class Item extends React.Component
 		
 	getDomCheckbox() {
 		const 
-			isDeleteAllowed = this.IsDeleteAllowed(),
-			boolSelected = this.IsSelected(),
-			intItemKey = this.getItemKey();
-
-		if (isDeleteAllowed) {
+			isDeleteAllowed = this.props.componentRights.isDeleteAllowed,
+			boolSelected = this.props.itemData.boolSelected,
+			intItemKey = this.props.itemKey,
+			itemState = this.state.itemState;
+		if (isDeleteAllowed && itemState !== 'add') {
 			return(
 				<input 
 					className="item_checkbox" 
@@ -140,10 +107,10 @@ class Item extends React.Component
 	getDomControls() {
 		const 
 			strItemState = this.getItemState(),
-			isEditAllowed = this.IsEditAllowed,
+			isEditAllowed = this.props.componentRights.isEditAllowed,
 			itemEditButton = 
 				isEditAllowed ? (
-					<span key='edit' className="item_button" onClick={this.setItemState.bind(this, 'edit')}>edit</span> 
+					<span key='edit' className="item_button" onClick={this.handleEditOnClick.bind(this)}>edit</span> 
 				) : (
 					''
 				),
@@ -159,9 +126,7 @@ class Item extends React.Component
 				) : (
 					''
 				);
-			
 		let jsxControls = '';
-			
 		switch(strItemState) {
 			case 'preview':
 			case 'show':
@@ -174,6 +139,7 @@ class Item extends React.Component
 			default:
 			break;
 		}
+
 		return jsxControls;
 	}
 	
@@ -197,18 +163,34 @@ class Item extends React.Component
 		const 
 			itemState = this.getItemState(),
 			domItem = this.getDomItem();
+			
+			
 			if (itemState === 'preview' || itemState ===  'show') { 
 				return (
 					<div className="item_wrapper">{domItem}</div>
 				);
-			} else {
+			} else if (itemState === 'edit') {
 				return (
 					<form className="item_wrapper" onSubmit={this.handleFormOnSubmit.bind(this)}>{domItem}</form>
+				);
+			} else if (itemState === 'add') {
+				const itemData = {
+					strName:this.state.tempName,
+					strDescription:this.state.tempDescription,
+				};
+				return (
+					<form className="item_wrapper" onSubmit={this.props.onSubmit(itemData)}>{domItem}</form>
 				);
 			}
 	}
 	
 	/* Event handlers */
+	
+	handleNameOnChange(event) {
+		const strName = event.target.value;
+		this.setState({tempName: strName});
+	}
+	
 	handleNameOnClick(event) {
 		const itemState = this.getItemState();
 		const newItemState = 
@@ -221,6 +203,10 @@ class Item extends React.Component
 		this.setState({
 			itemState: newItemState,
 		});
+	}
+	
+	handleEditOnClick() {
+		this.setState({itemState: 'edit'});
 	}
 	
 	handleDescriptionOnChange(event) {
@@ -240,14 +226,18 @@ class Item extends React.Component
 	}
 	
 	handleCancelOnClick() {
-		this.setItemState('show');
-		this.setState({
-			tempDescription: this.getDescription(),
-		});
+		if (this.state.itemState === 'add') {
+			this.props.onCancel();
+		} else {
+			this.setState({
+				itemState: 'show',
+				tempDescription: this.props.itemData.description,
+			});
+		}
+		
 	}
 	
-	render()
-	{
+	render() {
 		return (
 			<div className="item">
 				<div className="item_checkbox-wrapper">{this.getDomCheckbox()}</div>
